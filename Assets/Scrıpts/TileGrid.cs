@@ -41,12 +41,12 @@ public class TileGrid : MonoBehaviour
         while (cells[index].isOccupied)
         {
             index++;
-            if (index > cells.Length)
+            if (index > cells.Length - 1)
             {
                 index = 0;
             }
 
-            if (index > startIndex)
+            if (index == startIndex)
             {
                 return null;
             }

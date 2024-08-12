@@ -13,6 +13,8 @@ public class TileBoard : MonoBehaviour
     public TileState[] tileStates;
     private bool waiting;
 
+    public GameManager gameManager;
+
 
 
 
@@ -22,14 +24,9 @@ public class TileBoard : MonoBehaviour
         tiles = new List<Tile>(16);
     }
 
-    private void Start()
-    {
-        CreateTile();
-        CreateTile();
-        Debug.Log("board started");
-    }
+    
 
-    private void CreateTile()
+    public  void CreateTile()
     {
 
         Tile tile = Instantiate(tilePrefab, TileGrid.transform);
@@ -38,6 +35,21 @@ public class TileBoard : MonoBehaviour
         tile.spawn(TileGrid.getRandomEmptyCell());
         tiles.Add(tile);
         Debug.Log("tiles created started");
+    }
+
+    public void ClearBoard(){
+
+        foreach (var cell in TileGrid.cells)
+        {   
+            cell.tile = null;
+        }
+
+        foreach (var tile in tiles)
+        {
+            Destroy(tile.gameObject);
+        }
+
+        tiles.Clear();
     }
 
     private void Update()
@@ -123,10 +135,12 @@ public class TileBoard : MonoBehaviour
 
         b.SetState(tileStates[index], number);
 
+        gameManager.IncreaseScore(number);
+
     }
 
     private bool CanMerge(Tile a, Tile b){
-       return  a.number == b.number;
+       return  a.number == b.number && !b.locked;
     }
 
     private IEnumerator waitForChanges(){
@@ -135,9 +149,54 @@ public class TileBoard : MonoBehaviour
 
         waiting = false;
 
+        foreach (var tile in tiles)
+        {
+            tile.locked = false;
+        }
+
         if (tiles.Count != TileGrid.size) {
             CreateTile();
         }
+
+        if (CheckGameOver())
+        {
+            gameManager.GameOver();
+        }
+
+
+    }
+
+    private bool CheckGameOver(){
+        if(tiles.Count != TileGrid.size){
+            return false;
+        }
+
+        foreach (var tile in tiles)
+        {
+            TileCell up = TileGrid.getNextCell(tile.cell, Vector2Int.up);
+            TileCell down = TileGrid.getNextCell(tile.cell, Vector2Int.down);
+            TileCell left = TileGrid.getNextCell(tile.cell, Vector2Int.left);
+            TileCell right = TileGrid.getNextCell(tile.cell, Vector2Int.right);
+
+            if (up != null && CanMerge(tile, up.tile))
+            {
+                return false;
+            }
+            if (down != null && CanMerge(tile, down.tile))
+            {
+                return false;
+            }
+            if (left != null && CanMerge(tile, left.tile))
+            {
+                return false;
+            }
+            if (right != null && CanMerge(tile, right.tile))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private int IndexOf(TileState state)

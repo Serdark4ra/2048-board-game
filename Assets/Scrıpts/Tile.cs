@@ -12,6 +12,8 @@ public class Tile : MonoBehaviour
     public TileCell cell { get; private set; }
     public int number { get; private set; }
 
+    public bool locked  { get;  set; }
+
     private Image background;
     private TextMeshProUGUI text;
 
@@ -35,17 +37,24 @@ public class Tile : MonoBehaviour
     }
 
     public void spawn(TileCell cell)
+{
+    if (cell == null)
     {
-        if (this.cell != null)
-        {
-            this.cell.tile = null;
-        }
-
-        this.cell = cell;
-        this.cell.tile = this;
-
-        transform.position = cell.transform.position;
+        Debug.LogError("Tile.spawn was called with a null TileCell.");
+        return;
     }
+
+    if (this.cell != null)
+    {
+        this.cell.tile = null;
+    }
+
+    this.cell = cell;
+    this.cell.tile = this;
+
+    transform.position = cell.transform.position;
+}
+
 
     public void MoveTo(TileCell cell){
         if (this.cell != null)
@@ -87,6 +96,7 @@ public class Tile : MonoBehaviour
         }
 
         this.cell = null;
+        cell.tile.locked = true;
 
         StartCoroutine(animate(cell.transform.position, true));
     }
